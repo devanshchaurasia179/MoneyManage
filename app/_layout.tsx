@@ -1,28 +1,23 @@
-import { DarkTheme, DefaultTheme } from '@react-navigation/native';
-import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import 'react-native-reanimated';
+import { useEffect, useState } from "react";
+import { Stack } from "expo-router";
 import { ThemeProvider } from "../context/ThemeContext";
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { initDB } from "../utils/db";
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
+  const [dbReady, setDbReady] = useState(false);
+
+  useEffect(() => {
+    initDB();
+    setDbReady(true);
+  }, []);
+
+  if (!dbReady) return null;
 
   return (
     <ThemeProvider>
-      
       <Stack screenOptions={{ headerShown: false }}>
-        {/* Get Started Screen */}
-        <Stack.Screen name="index" />
-
-        {/* Onboarding Flow */}
-        <Stack.Screen name="onboarding/index" />
-
-        {/* Main App */}
-        <Stack.Screen name="(tabs)" />
+        {/* your screens */}
       </Stack>
-
-      <StatusBar style="auto" />
     </ThemeProvider>
   );
 }

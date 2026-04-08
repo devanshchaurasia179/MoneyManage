@@ -2,23 +2,23 @@ import React, { useState, useCallback } from "react";
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from "react-native";
 import { useFocusEffect } from "expo-router";
 import {
-  initDB, getTransactions, getArchivedTransactions,
-  addTransaction, deleteTransaction, archiveTransaction, unarchiveTransaction,
+  initDB, getTransactions, getStarredTransactions,
+  addTransaction, deleteTransaction, toggleStar,
   getUser, Transaction,
 } from "../../utils/db";
 import { useTheme } from "../../context/ThemeContext";
 
-import { UIAlertModal } from "../../components/UIAlertModal";
-import { BalanceCard } from "../../components/BalanceCard";
-import { BarChart } from "../../components/BarChart";
-import { TransactionRow } from "../../components/TransactionRow";
-import { AddTransactionModal, FormState } from "../../components/AddTransactionModal";
-import { TransactionDetailModal } from "../../components/TransactionDetailModal";
-import { IconPlus } from "../../components/Icons";
+import { UIAlertModal } from "../../components/Home/UIAlertModal";
+import { BalanceCard } from "../../components/Home/BalanceCard";
+import { BarChart } from "../../components/Home/BarChart";
+import { TransactionRow } from "../../components/Home/TransactionRow";
+import { AddTransactionModal, FormState } from "../../components/Home/AddTransactionModal";
+import { TransactionDetailModal } from "../../components/Home/TransactionDetailModal";
+import { IconPlus } from "../../components/Home/Icons";
 import {
   DEFAULT_CATEGORIES, getCurrencySymbol,
   ChartRange, ActiveTab, AlertConfig,
-} from "../../components/constants";
+} from "../../components/Home/constants";
 
 export default function HomeScreen() {
   const { isDark } = useTheme();
@@ -39,18 +39,18 @@ export default function HomeScreen() {
     sectionBorder: "#e2e8f0", hint: "#94a3b8", empty: "#94a3b8",
   };
 
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [archivedTxs, setArchivedTxs] = useState<Transaction[]>([]);
-  const [activeTab, setActiveTab] = useState<ActiveTab>("active");
-  const [currency, setCurrency] = useState("$");
-  const [addModalVisible, setAddModalVisible] = useState(false);
+  const [transactions, setTransactions]     = useState<Transaction[]>([]);
+  const [starredTxs, setStarredTxs]         = useState<Transaction[]>([]);
+  const [activeTab, setActiveTab]           = useState<ActiveTab>("active");
+  const [currency, setCurrency]             = useState("$");
+  const [addModalVisible, setAddModalVisible]       = useState(false);
   const [detailModalVisible, setDetailModalVisible] = useState(false);
-  const [selectedTx, setSelectedTx] = useState<Transaction | null>(null);
-  const [alertConfig, setAlertConfig] = useState<AlertConfig | null>(null);
-  const [categories, setCategories] = useState<string[]>(DEFAULT_CATEGORIES);
-  const [chartRange, setChartRange] = useState<ChartRange>("1M");
+  const [selectedTx, setSelectedTx]         = useState<Transaction | null>(null);
+  const [alertConfig, setAlertConfig]       = useState<AlertConfig | null>(null);
+  const [categories, setCategories]         = useState<string[]>(DEFAULT_CATEGORIES);
+  const [chartRange, setChartRange]         = useState<ChartRange>("1M");
 
-  const showAlert = (config: AlertConfig) => setAlertConfig(config);
+  const showAlert   = (config: AlertConfig) => setAlertConfig(config);
   const dismissAlert = () => setAlertConfig(null);
 
   useFocusEffect(
@@ -61,28 +61,34 @@ export default function HomeScreen() {
   );
 
   const loadAll = () => {
-    setTransactions(getTransactions());
-    setArchivedTxs(getArchivedTransactions());
+    const all = getTransactions();        // ALL transactions, starred + unstarred
+    setTransactions(all);
+    setStarredTxs(getStarredTransactions());
     const users = getUser();
     if (users.length > 0) setCurrency(getCurrencySymbol(users[0].currency));
   };
 
   const fmt = (n: number) =>
-    `${currency}${Math.abs(n).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    `${currency}${Math.abs(n).toLocaleString("en-US", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`;
 
-  const allForBalance = [
-    ...transactions,
-    ...archivedTxs.filter((t) => t.exclude_from_balance === 0),
-  ];
-  const totalBalance = allForBalance.reduce(
-    (acc, t) => (t.type === "income" ? acc + t.amount : acc - t.amount), 0
-  );
+  // Balance uses all transactions except those explicitly excluded
+  const totalBalance = transactions
+    .filter((t) => t.exclude_from_balance === 0)
+    .reduce((acc, t) => (t.type === "income" ? acc + t.amount : acc - t.amount), 0);
 
+  // Monthly change = current month transactions (all, not just unstarred)
   const now = new Date();
   const monthlyChange = transactions
     .filter((t) => {
       const d = new Date(t.date);
-      return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+      return (
+        d.getMonth() === now.getMonth() &&
+        d.getFullYear() === now.getFullYear() &&
+        t.exclude_from_balance === 0
+      );
     })
     .reduce((acc, t) => (t.type === "income" ? acc + t.amount : acc - t.amount), 0);
 
@@ -102,28 +108,27 @@ export default function HomeScreen() {
       message: `Remove "${tx.title}" (${tx.type === "income" ? "+" : "-"}${fmt(tx.amount)})? This cannot be undone.`,
       buttons: [
         { text: "Cancel", style: "cancel" },
-        { text: "Delete", style: "destructive", onPress: () => { deleteTransaction(tx.id); loadAll(); } },
+        {
+          text: "Delete", style: "destructive",
+          onPress: () => { deleteTransaction(tx.id); loadAll(); },
+        },
       ],
     });
   };
 
-  const handleArchive = (tx: Transaction) => {
-    if (tx.archived === 1) { unarchiveTransaction(tx.id); loadAll(); return; }
-    showAlert({
-      icon: "archive",
-      title: "Archive Transaction",
-      message: `Archive "${tx.title}"? Choose whether it should still affect your total balance.`,
-      buttons: [
-        { text: "Cancel", style: "cancel" },
-        { text: "Archive · keep in balance", style: "default", onPress: () => { archiveTransaction(tx.id, false); loadAll(); } },
-        { text: "Archive · exclude from balance", style: "default", onPress: () => { archiveTransaction(tx.id, true); loadAll(); } },
-      ],
-    });
+  // Star = bookmark. Transaction stays visible in Recent, just gets a star badge.
+  const handleStar = (tx: Transaction) => {
+    toggleStar(tx.id, tx.starred === 1);
+    loadAll();
   };
 
   const handleAddCategory = (cat: string) => {
     if (!categories.includes(cat)) setCategories((p) => [...p, cat]);
   };
+
+  // What to show in the active tab — all transactions (starred show with a star icon)
+  const recentList  = transactions.slice(0, 20);
+  const starredList = starredTxs;
 
   return (
     <View style={[styles.container, { backgroundColor: C.bg }]}>
@@ -137,8 +142,8 @@ export default function HomeScreen() {
         {/* Chart */}
         <BarChart transactions={transactions} chartRange={chartRange} onRangeChange={setChartRange} />
 
-        {/* Add button row */}
-        <View style={[styles.addRow]}>
+        {/* Add button */}
+        <View style={styles.addRow}>
           <TouchableOpacity
             style={[styles.addBtn, { backgroundColor: C.addBtn, borderColor: C.addBorder }]}
             onPress={() => setAddModalVisible(true)}
@@ -150,7 +155,7 @@ export default function HomeScreen() {
 
         {/* Tabs */}
         <View style={styles.tabRow}>
-          {(["active", "archived"] as ActiveTab[]).map((tab) => (
+          {(["active", "starred"] as ActiveTab[]).map((tab) => (
             <TouchableOpacity
               key={tab}
               style={[
@@ -165,7 +170,9 @@ export default function HomeScreen() {
                 { color: C.tabText },
                 activeTab === tab && { color: C.tabTextActive, fontWeight: "700" },
               ]}>
-                {tab === "active" ? "Recent" : `Archived (${archivedTxs.length})`}
+                {tab === "active"
+                  ? "Recent"
+                  : `Starred (${starredTxs.length})`}
               </Text>
             </TouchableOpacity>
           ))}
@@ -174,28 +181,38 @@ export default function HomeScreen() {
         {/* Transaction List */}
         <View style={styles.section}>
           {activeTab === "active" ? (
-            transactions.length === 0
-              ? <Text style={[styles.emptyText, { color: C.empty }]}>No transactions yet. Tap "Add Transaction" to get started.</Text>
-              : transactions.slice(0, 5).map((t) => (
+            recentList.length === 0
+              ? <Text style={[styles.emptyText, { color: C.empty }]}>
+                  No transactions yet. Tap "Add Transaction" to get started.
+                </Text>
+              : recentList.map((t) => (
                 <TransactionRow
-                  key={t.id} transaction={t} isArchived={false} fmt={fmt}
+                  key={t.id}
+                  transaction={t}
+                  fmt={fmt}
                   onPress={(tx) => { setSelectedTx(tx); setDetailModalVisible(true); }}
-                  onDelete={handleDelete} onArchive={handleArchive}
+                  onDelete={handleDelete}
+                  onStar={handleStar}
                 />
               ))
           ) : (
-            archivedTxs.length === 0
-              ? <Text style={[styles.emptyText, { color: C.empty }]}>No archived transactions.</Text>
-              : archivedTxs.map((t) => (
+            starredList.length === 0
+              ? <Text style={[styles.emptyText, { color: C.empty }]}>
+                  No starred transactions yet. Swipe left and tap the star to save one.
+                </Text>
+              : starredList.map((t) => (
                 <TransactionRow
-                  key={t.id} transaction={t} isArchived={true} fmt={fmt}
+                  key={t.id}
+                  transaction={t}
+                  fmt={fmt}
                   onPress={(tx) => { setSelectedTx(tx); setDetailModalVisible(true); }}
-                  onDelete={handleDelete} onArchive={handleArchive}
+                  onDelete={handleDelete}
+                  onStar={handleStar}
                 />
               ))
           )}
           {activeTab === "active" && transactions.length > 0 && (
-            <Text style={[styles.hint, { color: C.hint }]}>← swipe left to archive or delete</Text>
+            <Text style={[styles.hint, { color: C.hint }]}>← swipe left to star or delete</Text>
           )}
         </View>
       </ScrollView>
@@ -214,7 +231,7 @@ export default function HomeScreen() {
         transaction={selectedTx}
         fmt={fmt}
         onClose={() => setDetailModalVisible(false)}
-        onArchive={handleArchive}
+        onStar={handleStar}
         onDelete={handleDelete}
       />
     </View>
@@ -227,8 +244,7 @@ const styles = StyleSheet.create({
   addRow: { paddingHorizontal: 16, marginBottom: 14, marginTop: 4 },
   addBtn: {
     flexDirection: "row", alignItems: "center", justifyContent: "center",
-    gap: 8, paddingVertical: 12, borderRadius: 14,
-    borderWidth: 1,
+    gap: 8, paddingVertical: 12, borderRadius: 14, borderWidth: 1,
   },
   addBtnText: { fontSize: 14, fontWeight: "700" },
   tabRow: { flexDirection: "row", marginHorizontal: 16, marginBottom: 8, gap: 8 },

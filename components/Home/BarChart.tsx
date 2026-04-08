@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from "react-native";
-import { Transaction } from "../utils/db";
-import { useTheme } from "../context/ThemeContext";
+import { Transaction } from "../../utils/db";
+import { useTheme } from "../../context/ThemeContext";
 import { ChartRange } from "./constants";
 
 type Props = {

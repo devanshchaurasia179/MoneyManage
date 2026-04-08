@@ -6,7 +6,7 @@ import {
 import { IconClose } from "./Icons";
 import { DateTimePicker } from "./DateTimePicker";
 import { AlertConfig } from "./constants";
-import { useTheme } from "../context/ThemeContext";
+import { useTheme } from "../../context/ThemeContext";
 
 export type FormState = {
   title: string;

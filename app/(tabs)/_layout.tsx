@@ -3,8 +3,7 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import {
   View, Text, Platform, TouchableOpacity, Animated, Easing,
 } from "react-native";
-import { useEffect, useRef, useState, useCallback } from "react";
-import { getUser } from "../../utils/db";
+import { useEffect, useRef, useCallback } from "react";
 import { useTheme } from "../../context/ThemeContext";
 
 // ─── Animated Theme Toggle ────────────────────────────────────────────────────
@@ -70,16 +69,13 @@ function ThemeToggle() {
           justifyContent: "center",
         }}
       >
-        {/* Moon dots */}
         <View style={{ position: "absolute", left: 7, top: 7, opacity: isDark ? 0.9 : 0 }}>
           <View style={{ width: 2.5, height: 2.5, borderRadius: 2, backgroundColor: "#bfdbfe", marginBottom: 3 }} />
           <View style={{ width: 1.5, height: 1.5, borderRadius: 1, backgroundColor: "#93c5fd" }} />
         </View>
-        {/* Sun dot */}
         <View style={{ position: "absolute", right: 9, top: 9, opacity: isDark ? 0 : 0.9 }}>
           <View style={{ width: 2.5, height: 2.5, borderRadius: 2, backgroundColor: "#f59e0b" }} />
         </View>
-        {/* Thumb */}
         <Animated.View
           style={{
             position: "absolute", left: 0,
@@ -101,29 +97,24 @@ function ThemeToggle() {
 
 // ─── Layout ───────────────────────────────────────────────────────────────────
 export default function TabsLayout() {
-  const { isDark } = useTheme();
-  const [name, setName] = useState("");
+  // ✅ userName now comes from context — updates instantly when Profile saves
+  const { isDark, userName } = useTheme();
 
   const C = isDark ? {
     headerBg: "#080C12", headerBorder: "#1a2235",
-    tabBg: "#080C12", tabBorder: "#1a2235",
+    tabBg: "#02070e", tabBorder: "#1a2235",
     active: "#2ECC71", inactive: "#2d4a5e",
     text: "#ffffff", subtext: "#64748b",
     iconBg: "#0d1f12", iconBorder: "#1a3a22",
-    focusBg: "#0d1f12", shadow: "#000000",
+    focusBg: "#080C12", shadow: "#000000",
   } : {
     headerBg: "#ffffff", headerBorder: "#e2e8f0",
-    tabBg: "#ffffff", tabBorder: "#e2e8f0",
+    tabBg: "#fbfbfb", tabBorder: "#e2e8f0",
     active: "#16a34a", inactive: "#94a3b8",
     text: "#0f172a", subtext: "#64748b",
     iconBg: "#f0fdf4", iconBorder: "#bbf7d0",
-    focusBg: "#f0fdf4", shadow: "#94a3b8",
+    focusBg: "#fbfbfb", shadow: "#94a3b8",
   };
-
-  useEffect(() => {
-    const user = getUser();
-    if (user && user.length > 0) setName(user[0].name);
-  }, []);
 
   const headerLeft = useCallback(
     () => (
@@ -136,11 +127,14 @@ export default function TabsLayout() {
         </View>
         <View style={{ marginLeft: 10 }}>
           <Text style={{ color: C.subtext, fontSize: 11, fontWeight: "500", letterSpacing: 0.3 }}>Hello,</Text>
-          <Text style={{ color: C.text, fontSize: 14, fontWeight: "800", letterSpacing: -0.3 }}>{name || "User"}</Text>
+          {/* ✅ Reads from context — live updates */}
+          <Text style={{ color: C.text, fontSize: 14, fontWeight: "800", letterSpacing: -0.3 }}>
+            {userName || "User"}
+          </Text>
         </View>
       </View>
     ),
-    [isDark, name, C]
+    [isDark, userName, C]
   );
 
   const headerRight = useCallback(
@@ -180,10 +174,10 @@ export default function TabsLayout() {
         },
         tabBarStyle: {
           position: "absolute",
-          bottom: Platform.OS === "ios" ? 28 : 18,
+          bottom: Platform.OS === "ios" ? 28 : 22,
           left: 16, right: 16,
           backgroundColor: C.tabBg,
-          borderRadius: 26, height: 64,
+          borderRadius: 28, height: 64,
           borderTopWidth: 1, borderColor: C.tabBorder,
           paddingBottom: Platform.OS === "ios" ? 0 : 4,
           elevation: 20,

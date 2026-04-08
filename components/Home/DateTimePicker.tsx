@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, Modal, StyleSheet, ScrollView } from "react-native";
 import { IconCalendar, IconClock, IconClose } from "./Icons";
-import { useTheme } from "../context/ThemeContext";
+import { useTheme } from "../../context/ThemeContext";
 
 type Props = { value: Date; onChange: (date: Date) => void };
 

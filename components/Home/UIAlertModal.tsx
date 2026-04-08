@@ -2,7 +2,7 @@ import React, { useRef } from "react";
 import { Modal, Animated, View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { AlertConfig } from "./constants";
 import { IconTrash, IconArchive, IconInfo, IconWarn } from "./Icons";
-import { useTheme } from "../context/ThemeContext";
+import { useTheme } from "../../context/ThemeContext";
 
 type Props = { config: AlertConfig | null; onDismiss: () => void };
 

@@ -76,8 +76,8 @@ const styles = StyleSheet.create({
   },
   divider: {
     height: 1,
-    backgroundColor: "#1a3320",
-    width: "60%",
+    backgroundColor: "#bbc8be",
+    width: "90%",
     marginVertical: 12,
   },
   monthlyChange: {
