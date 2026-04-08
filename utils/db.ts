@@ -2,12 +2,10 @@ import * as SQLite from "expo-sqlite";
 
 let db: SQLite.SQLiteDatabase;
 
-// Initialize DB
 export const initDB = () => {
   if (!db) {
     db = SQLite.openDatabaseSync("finance.db");
 
-    // Create tables
     db.execSync(`
       CREATE TABLE IF NOT EXISTS user (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -19,71 +17,131 @@ export const initDB = () => {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         title TEXT,
         amount REAL,
-        type TEXT, -- income / expense
+        type TEXT,
         category TEXT,
         date TEXT,
-        note TEXT
+        note TEXT,
+        archived INTEGER DEFAULT 0,
+        exclude_from_balance INTEGER DEFAULT 0
       );
     `);
+
+    // Run migrations for existing DBs that don't have new columns yet
+    try {
+      db.execSync(`ALTER TABLE transactions ADD COLUMN archived INTEGER DEFAULT 0;`);
+    } catch (_) {}
+    try {
+      db.execSync(`ALTER TABLE transactions ADD COLUMN exclude_from_balance INTEGER DEFAULT 0;`);
+    } catch (_) {}
   }
 
   return db;
 };
 
-// Get DB instance
 export const getDB = () => {
-  if (!db) {
-    throw new Error("Database not initialized. Call initDB() first.");
-  }
+  if (!db) throw new Error("Database not initialized. Call initDB() first.");
   return db;
 };
 
 
-// ---------------- USER FUNCTIONS ----------------
+// ─── USER ──────────────────────────────────────────────────
 
-// Get user
 export const getUser = () => {
   const database = getDB();
-  return database.getAllSync("SELECT * FROM user LIMIT 1");
+  return database.getAllSync("SELECT * FROM user LIMIT 1") as {
+    id: number;
+    name: string;
+    currency: string;
+  }[];
 };
 
-// Insert user
 export const insertUser = (name: string, currency: string) => {
   const database = getDB();
-  database.runSync(
-    "INSERT INTO user (name, currency) VALUES (?, ?)",
-    [name, currency]
-  );
+  database.runSync("INSERT INTO user (name, currency) VALUES (?, ?)", [name, currency]);
+};
+
+export const updateUser = (name: string, currency: string) => {
+  const database = getDB();
+  database.runSync("UPDATE user SET name = ?, currency = ? WHERE id = 1", [name, currency]);
 };
 
 
-// ---------------- TRANSACTION FUNCTIONS ----------------
+// ─── TRANSACTIONS ──────────────────────────────────────────
 
-// Add transaction
+export type Transaction = {
+  id: number;
+  title: string;
+  amount: number;
+  type: "income" | "expense";
+  category: string;
+  date: string;
+  note: string;
+  archived: number;         // 0 = active, 1 = archived
+  exclude_from_balance: number; // 0 = counts, 1 = excluded
+};
+
 export const addTransaction = (
   title: string,
   amount: number,
   type: "income" | "expense",
   category: string,
   date: string,
-  note:string
+  note: string
 ) => {
   const database = getDB();
   database.runSync(
-    `INSERT INTO transactions (title, amount, type, category, date, note)
-     VALUES (?, ?, ?, ?, ?,?)`,
+    `INSERT INTO transactions (title, amount, type, category, date, note, archived, exclude_from_balance)
+     VALUES (?, ?, ?, ?, ?, ?, 0, 0)`,
     [title, amount, type, category, date, note]
   );
 };
 
-// Get all transactions
-export const getTransactions = () => {
+// Active (non-archived) transactions
+export const getTransactions = (): Transaction[] => {
   const database = getDB();
-  return database.getAllSync("SELECT * FROM transactions ORDER BY date DESC");
+  return database.getAllSync(
+    "SELECT * FROM transactions WHERE archived = 0 ORDER BY date DESC"
+  ) as Transaction[];
 };
 
-// Delete transaction
+// Archived transactions
+export const getArchivedTransactions = (): Transaction[] => {
+  const database = getDB();
+  return database.getAllSync(
+    "SELECT * FROM transactions WHERE archived = 1 ORDER BY date DESC"
+  ) as Transaction[];
+};
+
+// Single transaction by id
+export const getTransactionById = (id: number): Transaction | null => {
+  const database = getDB();
+  const rows = database.getAllSync(
+    "SELECT * FROM transactions WHERE id = ?",
+    [id]
+  ) as Transaction[];
+  return rows[0] ?? null;
+};
+
+// Permanently delete
 export const deleteTransaction = (id: number) => {
   const database = getDB();
   database.runSync("DELETE FROM transactions WHERE id = ?", [id]);
+};
+
+// Archive (soft-delete) — optionally exclude from balance
+export const archiveTransaction = (id: number, excludeFromBalance: boolean) => {
+  const database = getDB();
+  database.runSync(
+    "UPDATE transactions SET archived = 1, exclude_from_balance = ? WHERE id = ?",
+    [excludeFromBalance ? 1 : 0, id]
+  );
+};
+
+// Unarchive
+export const unarchiveTransaction = (id: number) => {
+  const database = getDB();
+  database.runSync(
+    "UPDATE transactions SET archived = 0, exclude_from_balance = 0 WHERE id = ?",
+    [id]
+  );
 };
