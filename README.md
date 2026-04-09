@@ -18,9 +18,8 @@ A modern **Finance Manager / Expense Tracker** built using **React Native (Expo)
 
 ## 📥 Download APK
 
-👉 [Download Latest APK](https://your-apk-link-here)
+👉 [Download Latest APK]([https://your-apk-link-here](https://expo.dev/accounts/dc31/projects/MoneyManager/builds/8a6062d7-7ecb-45de-8fb6-f26557b73bba))
 
-> Replace this link with your actual APK (Google Drive / GitHub Releases)
 
 ---
 
