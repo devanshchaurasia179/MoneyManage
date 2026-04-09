@@ -1,50 +1,161 @@
-# Welcome to your Expo app 👋
+# 💰 Money Manager – Expense Tracker App
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
 
-## Get started
+A modern **Finance Manager / Expense Tracker** built using **React Native (Expo)** and **SQLite** for reliable offline storage.
 
-1. Install dependencies
+> Designed with a clean fintech-style UI and powerful budgeting features to help users track and control their expenses.
+
+---
+
+## ✨ Highlights
+
+* 📱 Offline-first expense tracker
+* 🎯 Smart budgeting system
+* 📊 Beautiful analytics dashboard
+* 🌙 Dark & Light theme
+
+---
+
+## 📥 Download APK
+
+👉 [Download Latest APK](https://your-apk-link-here)
+
+> Replace this link with your actual APK (Google Drive / GitHub Releases)
+
+---
+
+## 🚀 Features
+
+### 📊 Dashboard
+
+* Total balance overview
+* Monthly income/expense summary
+* Weekly analytics chart
+
+### 📈 Insights & Analytics
+
+* Category-wise spending breakdown (Donut chart)
+* Monthly / Weekly / Yearly filters
+* Net balance calculation
+
+### 💸 Transactions
+
+* Add income & expenses
+* Swipe to **delete** or **archive**
+* Categorized transaction list
+
+### 🎯 Budget Management
+
+* Set budget per category
+* Real-time usage tracking
+* ⚠️ Over-budget alerts
+
+### 🎁 Offers & Vouchers
+
+* Curated deals (Food, Shopping, Travel)
+* Copy coupon codes instantly
+
+### 👤 Profile
+
+* Edit display name
+* Select currency (INR supported)
+* Data stored locally (secure & private)
+
+### 🌗 UI/UX
+
+* Dark mode + Light mode
+* Smooth animations
+* Clean fintech-style UI
+
+---
+
+## 🛠️ Tech Stack
+
+* ⚛️ React Native (Expo)
+* 🗄️ SQLite (Local Database)
+* 📱 Expo Router
+* 🟦 TypeScript
+
+---
+
+## 📦 Setup Instructions
+
+1. Clone the repository:
+
+   ```bash
+   git clone https://github.com/devanshchaurasia179/MoneyManage.git
+   cd your-repo-name
+   ```
+
+2. Install dependencies:
 
    ```bash
    npm install
    ```
 
-2. Start the app
+3. Start the app:
 
    ```bash
    npx expo start
    ```
 
-In the output, you'll find options to open the app in a
+4. Run on device:
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+   * Expo Go app
+   * Android Emulator
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+---
 
-## Get a fresh project
+## 📸 Screenshots
 
-When you're ready, run:
+![Screenshot 1](assets/images/SS1.jpeg)
+![Screenshot 2](assets/images/SS2.jpeg)
+![Screenshot 3](assets/images/SS3.jpeg)
+![Screenshot 4](assets/images/SS4.jpeg)
+![Screenshot 5](assets/images/SS5.jpeg)
+![Screenshot 6](assets/images/SS6.jpeg)
+![Screenshot 7](assets/images/SS7.jpeg)
+![Screenshot 8](assets/images/SS8.jpeg)
+![Screenshot 9](assets/images/SS9.jpeg)
+![Screenshot 10](assets/images/SS10.jpeg)
+![Screenshot 11](assets/images/SS11.jpeg)
 
-```bash
-npm run reset-project
-```
+---
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## 🧠 Key Highlights
 
-## Learn more
+* Offline-first app using SQLite
+* Budget system prevents overspending
+* Clean fintech UI (Dark + Light mode)
+* Interactive analytics & charts
+* Swipe gestures for better UX
 
-To learn more about developing your project with Expo, look at the following resources:
+---
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## 💡 Why SQLite?
 
-## Join the community
+* Works offline
+* Fast & lightweight
+* No backend required
+* Persistent local storage
 
-Join our community of developers creating universal apps.
+---
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## 🔮 Future Improvements
+
+* Cloud sync (Firebase / Supabase)
+* Authentication system
+* Export reports (PDF/CSV)
+* Smart notifications
+
+---
+
+## 👨‍💻 Author
+
+**Devansh Kumar**
+
+---
+
+## ⭐ Support
+
+If you like this project, give it a ⭐ on GitHub!

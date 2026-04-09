@@ -40,7 +40,7 @@ export const TransactionDetailModal = ({
 
   const C = isDark ? {
     overlay:      "rgba(0,0,0,0.75)",
-    sheet:        "#0f1b12",
+    sheet:        "#000000",
     sheetBorder:  "#1a3320",
     title:        "#e5e7eb",
     closeBg:      "#0a140d",

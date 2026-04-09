@@ -13,6 +13,7 @@ import { useState } from "react";
 import { useRouter } from "expo-router";
 import { insertUser, initDB } from "../../utils/db";
 import { Ionicons } from "@expo/vector-icons";
+import { useTheme } from "../../context/ThemeContext";
 
 const currencies = [
   { label: "Rupee", symbol: "₹" },
@@ -23,6 +24,7 @@ const currencies = [
 
 export default function Onboarding() {
   const router = useRouter();
+  const { refreshUser } = useTheme();
   const [name, setName] = useState("");
   const [currency, setCurrency] = useState("₹");
   const [isFocused, setIsFocused] = useState(false);
@@ -31,6 +33,7 @@ export default function Onboarding() {
     if (!name.trim()) return;
     initDB();
     insertUser(name, currency);
+    refreshUser();
     router.replace("/(tabs)");
   };
 
@@ -48,7 +51,6 @@ export default function Onboarding() {
           </View>
 
           <View style={styles.form}>
-            {/* Name Input Group */}
             <Text style={styles.label}>FULL NAME</Text>
             <View style={[
               styles.inputContainer, 
@@ -66,7 +68,6 @@ export default function Onboarding() {
               />
             </View>
 
-            {/* Currency Selection Group */}
             <Text style={[styles.label, { marginTop: 25 }]}>PRIMARY CURRENCY</Text>
             <View style={styles.currencyGrid}>
               {currencies.map((item) => (
@@ -114,7 +115,7 @@ export default function Onboarding() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#0f172a",
+    backgroundColor: "#ffffff",
   },
   inner: {
     flex: 1,
@@ -127,7 +128,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 32,
     fontWeight: "800",
-    color: "#fff",
+    color: "#000000",
     letterSpacing: -0.5,
   },
   subtitle: {
@@ -149,20 +150,20 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: "#1e293b",
+    backgroundColor: "#ffffff",
     paddingHorizontal: 16,
     height: 60,
     borderRadius: 16,
     borderWidth: 1.5,
-    borderColor: "transparent",
+    borderColor: "#22c55e",
   },
   inputFocused: {
     borderColor: "#22c55e",
-    backgroundColor: "#0f172a",
+    backgroundColor: "#ffffff",
   },
   input: {
     flex: 1,
-    color: "#fff",
+    color: "#000000",
     fontSize: 16,
     marginLeft: 12,
     fontWeight: '500',
@@ -174,13 +175,13 @@ const styles = StyleSheet.create({
   },
   currencyCard: {
     width: "48%",
-    backgroundColor: "#1e293b",
+    backgroundColor: "#ffffff",
     paddingVertical: 20,
     borderRadius: 16,
     alignItems: "center",
     marginBottom: 15,
     borderWidth: 1.5,
-    borderColor: "transparent",
+    borderColor: "grey",
   },
   selectedCurrencyCard: {
     backgroundColor: "rgba(34, 197, 94, 0.1)",

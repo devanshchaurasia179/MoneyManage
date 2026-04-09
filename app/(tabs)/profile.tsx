@@ -8,22 +8,12 @@ import { Ionicons } from "@expo/vector-icons";
 import { getUser, insertUser, updateUser } from "../../utils/db";
 import { useTheme } from "../../context/ThemeContext";
 
+// ✅ Matches exactly what onboarding offers
 const CURRENCIES = [
-  { label: "USD – US Dollar",         symbol: "$",   code: "USD", flag: "🇺🇸" },
-  { label: "EUR – Euro",              symbol: "€",   code: "EUR", flag: "🇪🇺" },
-  { label: "GBP – British Pound",     symbol: "£",   code: "GBP", flag: "🇬🇧" },
-  { label: "INR – Indian Rupee",      symbol: "₹",   code: "INR", flag: "🇮🇳" },
-  { label: "JPY – Japanese Yen",      symbol: "¥",   code: "JPY", flag: "🇯🇵" },
-  { label: "CAD – Canadian Dollar",   symbol: "CA$", code: "CAD", flag: "🇨🇦" },
-  { label: "AUD – Australian Dollar", symbol: "A$",  code: "AUD", flag: "🇦🇺" },
-  { label: "CHF – Swiss Franc",       symbol: "Fr",  code: "CHF", flag: "🇨🇭" },
-  { label: "CNY – Chinese Yuan",      symbol: "¥",   code: "CNY", flag: "🇨🇳" },
-  { label: "BRL – Brazilian Real",    symbol: "R$",  code: "BRL", flag: "🇧🇷" },
-  { label: "MXN – Mexican Peso",      symbol: "$",   code: "MXN", flag: "🇲🇽" },
-  { label: "KRW – South Korean Won",  symbol: "₩",   code: "KRW", flag: "🇰🇷" },
-  { label: "SGD – Singapore Dollar",  symbol: "S$",  code: "SGD", flag: "🇸🇬" },
-  { label: "AED – UAE Dirham",        symbol: "د.إ", code: "AED", flag: "🇦🇪" },
-  { label: "PKR – Pakistani Rupee",   symbol: "₨",   code: "PKR", flag: "🇵🇰" },
+  { label: "INR – Indian Rupee",  symbol: "₹", code: "INR", flag: "🇮🇳" },
+  { label: "USD – US Dollar",     symbol: "$", code: "USD", flag: "🇺🇸" },
+  { label: "EUR – Euro",          symbol: "€", code: "EUR", flag: "🇪🇺" },
+  { label: "GBP – British Pound", symbol: "£", code: "GBP", flag: "🇬🇧" },
 ];
 
 const DARK = {
@@ -70,7 +60,6 @@ const LIGHT = {
   shimmer: "#e8e4df",
 };
 
-// Animated Save Button
 function SaveButton({ onPress, saved, T }: { onPress: () => void; saved: boolean; T: typeof DARK }) {
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
@@ -121,10 +110,35 @@ export default function Profile() {
   const { isDark, setUserName } = useTheme();
   const T = isDark ? DARK : LIGHT;
 
-  const [name, setName] = useState("");
-  const [currency, setCurrency] = useState("USD");
+  const [name, setName] = useState(() => {
+    try {
+      const users = getUser();
+      return users[0]?.name ?? "";
+    } catch {
+      return "";
+    }
+  });
+
+  // ✅ Default is INR; falls back to INR if DB value isn't in the 4 options
+  const [currency, setCurrency] = useState(() => {
+    try {
+      const users = getUser();
+      const saved = users[0]?.currency ?? "INR";
+      return CURRENCIES.find((c) => c.code === saved) ? saved : "INR";
+    } catch {
+      return "INR";
+    }
+  });
+
+  const [hasUser, setHasUser] = useState(() => {
+    try {
+      return getUser().length > 0;
+    } catch {
+      return false;
+    }
+  });
+
   const [showCurrencyPicker, setShowCurrencyPicker] = useState(false);
-  const [hasUser, setHasUser] = useState(false);
   const [saved, setSaved] = useState(false);
   const [editingName, setEditingName] = useState(false);
 
@@ -133,16 +147,25 @@ export default function Profile() {
 
   useFocusEffect(
     useCallback(() => {
-      const users = getUser();
-      if (users.length > 0) {
-        setName(users[0].name ?? "");
-        setCurrency(users[0].currency ?? "USD");
-        setHasUser(true);
+      try {
+        const users = getUser();
+        if (users.length > 0) {
+          setName(users[0].name ?? "");
+          const savedCurrency = users[0].currency ?? "INR";
+          // ✅ Guard: only accept values present in our 4-option list
+          setCurrency(CURRENCIES.find((c) => c.code === savedCurrency) ? savedCurrency : "INR");
+          setHasUser(true);
+        }
+      } catch (e) {
+        console.warn("Profile: failed to load user from DB", e);
       }
+
       Animated.timing(fadeAnim, {
-        toValue: 1, duration: 350,
+        toValue: 1,
+        duration: 350,
         useNativeDriver: true,
       }).start();
+
       return () => fadeAnim.setValue(0);
     }, [])
   );
@@ -167,15 +190,23 @@ export default function Profile() {
       Alert.alert("Name required", "Please enter your name before saving.");
       return;
     }
-    if (hasUser) updateUser(name.trim(), currency);
-    else { insertUser(name.trim(), currency); setHasUser(true); }
 
-    // ✅ Update context so header updates instantly
-    setUserName(name.trim());
+    try {
+      if (hasUser) {
+        updateUser(name.trim(), currency);
+      } else {
+        insertUser(name.trim(), currency);
+        setHasUser(true);
+      }
 
-    setEditingName(false);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2500);
+      setUserName(name.trim());
+      setEditingName(false);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2500);
+    } catch (e) {
+      console.error("Profile: failed to save user", e);
+      Alert.alert("Save failed", "Could not save your profile. Please try again.");
+    }
   };
 
   const initials = name.trim()
@@ -193,7 +224,6 @@ export default function Profile() {
 
           {/* ── Hero Banner ── */}
           <View style={[s.heroBanner, { backgroundColor: T.accentGlow, borderColor: T.border }]}>
-            {/* Avatar */}
             <Animated.View style={[s.avatarRing, {
               borderColor: T.accent,
               shadowColor: T.accent,
@@ -372,7 +402,6 @@ const s = StyleSheet.create({
   root: { flex: 1 },
   scroll: { paddingHorizontal: 18, paddingBottom: 110, paddingTop: 20 },
 
-  // Hero
   heroBanner: {
     flexDirection: "row", alignItems: "center",
     borderRadius: 22, borderWidth: 1,
@@ -399,13 +428,11 @@ const s = StyleSheet.create({
   },
   currencyPillText: { fontSize: 12, fontWeight: "600" },
 
-  // Section
   sectionLabel: {
     fontSize: 10, fontWeight: "700", letterSpacing: 2.5,
     marginBottom: 10, marginLeft: 4,
   },
 
-  // Card
   card: {
     borderWidth: 1.5, borderRadius: 18,
     padding: 16, marginBottom: 14,
@@ -414,7 +441,6 @@ const s = StyleSheet.create({
   cardIconWrap: { width: 28, height: 28, borderRadius: 8, alignItems: "center", justifyContent: "center" },
   cardLabel: { fontSize: 11, fontWeight: "700", letterSpacing: 1.5 },
 
-  // Name
   nameRow: { flexDirection: "row", alignItems: "center", gap: 10 },
   nameInput: {
     flex: 1, fontSize: 16, fontWeight: "600",
@@ -428,7 +454,6 @@ const s = StyleSheet.create({
   },
   editBtnText: { fontSize: 12, fontWeight: "700" },
 
-  // Currency
   currencyBtn: {
     flexDirection: "row", alignItems: "center",
     justifyContent: "space-between",
@@ -450,12 +475,10 @@ const s = StyleSheet.create({
   pickerName: { fontSize: 11, marginTop: 1 },
   pickerSymbol: { fontSize: 13, fontWeight: "700" },
 
-  // Save
   saveBtn: { borderRadius: 16, paddingVertical: 16, alignItems: "center" },
   saveBtnInner: { flexDirection: "row", alignItems: "center" },
   saveBtnText: { color: "#fff", fontSize: 15, fontWeight: "800", letterSpacing: 0.2 },
 
-  // Footer
   footerRow: { flexDirection: "row", alignItems: "center", justifyContent: "center", marginTop: 20, paddingTop: 16, borderTopWidth: 1 },
   footer: { fontSize: 11 },
 });

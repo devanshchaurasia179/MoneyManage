@@ -5,7 +5,6 @@ import { initDB, getUser } from "../utils/db";
 
 const { width, height } = Dimensions.get("window");
 
-// ── Floating orb decoration ─────────────────────────────────────────
 const FloatingOrb = ({
   delay, size, x, y, color, duration,
 }: {
@@ -52,7 +51,6 @@ const FloatingOrb = ({
   );
 };
 
-// ── Stat badge ──────────────────────────────────────────────────────
 const StatBadge = ({
   label, value, delay, accent,
 }: {
@@ -91,7 +89,6 @@ export default function Index() {
   const navigationState = useRootNavigationState();
   const [loading, setLoading] = useState(true);
 
-  // Entry animations
   const logoAnim   = useRef(new Animated.Value(0)).current;
   const titleAnim  = useRef(new Animated.Value(0)).current;
   const subAnim    = useRef(new Animated.Value(0)).current;
@@ -100,7 +97,6 @@ export default function Index() {
   const shimmer    = useRef(new Animated.Value(0)).current;
   const glowPulse  = useRef(new Animated.Value(0.6)).current;
 
-  // Glow pulse loop
   useEffect(() => {
     Animated.loop(
       Animated.sequence([
@@ -110,7 +106,6 @@ export default function Index() {
     ).start();
   }, []);
 
-  // Shimmer loop on button
   const runShimmer = () => {
     shimmer.setValue(0);
     Animated.loop(
@@ -127,7 +122,6 @@ export default function Index() {
       setTimeout(() => router.replace("/(tabs)"), 0);
     } else {
       setLoading(false);
-      // Orchestrated staggered entrance
       Animated.stagger(100, [
         Animated.spring(logoAnim,  { toValue: 1, tension: 70, friction: 10, useNativeDriver: true }),
         Animated.spring(titleAnim, { toValue: 1, tension: 70, friction: 10, useNativeDriver: true }),
@@ -143,9 +137,10 @@ export default function Index() {
   const handlePressOut = () => {
     Animated.spring(btnScale, { toValue: 1, tension: 200, friction: 10, useNativeDriver: true }).start();
   };
-  const handleStart = () => router.push("/onboarding");
 
-  // ── Loading ──────────────────────────────────────────────────────
+  // ← KEY FIX: replace instead of push so index is removed from stack
+  const handleStart = () => router.replace("/onboarding");
+
   if (loading) {
     return (
       <View style={styles.container}>
@@ -155,7 +150,6 @@ export default function Index() {
     );
   }
 
-  // ── Animated helpers ─────────────────────────────────────────────
   const logoStyle = {
     opacity: logoAnim,
     transform: [
@@ -187,16 +181,13 @@ export default function Index() {
     <View style={styles.container}>
       <StatusBar barStyle="light-content" />
 
-      {/* ── Background orbs ──────────────────────────────────── */}
       <FloatingOrb delay={200} size={180} x={-60}       y={80}          color="rgba(34,197,94,0.07)"  duration={3200} />
       <FloatingOrb delay={400} size={120} x={width-90}  y={height*0.15} color="rgba(16,185,129,0.09)" duration={2800} />
       <FloatingOrb delay={600} size={90}  x={width*0.3} y={height*0.72} color="rgba(52,211,153,0.06)" duration={3600} />
 
-      {/* ── Logo glow ring ───────────────────────────────────── */}
       <Animated.View style={[styles.glowRing, { opacity: glowPulse }]} />
       <Animated.View style={[styles.glowRingOuter, { opacity: Animated.multiply(glowPulse, 0.4) }]} />
 
-      {/* ── Logo ─────────────────────────────────────────────── */}
       <Animated.View style={[styles.logoWrap, logoStyle]}>
         <Image
           source={require("../assets/images/finance.png")}
@@ -205,19 +196,15 @@ export default function Index() {
         />
       </Animated.View>
 
-  
-      {/* ── Title ────────────────────────────────────────────── */}
       <Animated.View style={titleStyle}>
         <Text style={styles.eyebrow}>YOUR FINANCIAL OS</Text>
         <Text style={styles.title}>Money{"\n"}Manager</Text>
       </Animated.View>
 
-      {/* ── Subtitle ─────────────────────────────────────────── */}
       <Animated.Text style={[styles.subtitle, subStyle]}>
         Track every rupee. Understand your patterns.{"\n"}Take control of your future.
       </Animated.Text>
 
-      {/* ── CTA button ───────────────────────────────────────── */}
       <Animated.View style={[styles.btnOuter, btnStyle]}>
         <TouchableOpacity
           activeOpacity={1}
@@ -226,7 +213,6 @@ export default function Index() {
           onPressOut={handlePressOut}
           onPress={handleStart}
         >
-          {/* Shimmer sweep */}
           <Animated.View
             style={[
               styles.shimmerStrip,
@@ -238,12 +224,10 @@ export default function Index() {
         </TouchableOpacity>
       </Animated.View>
 
-      {/* ── Footer note ──────────────────────────────────────── */}
       <Animated.Text style={[styles.footerNote, subStyle]}>
         No account needed · 100% private
       </Animated.Text>
 
-      {/* ── Bottom grid decoration ───────────────────────────── */}
       <View style={styles.gridDecor} pointerEvents="none">
         {Array.from({ length: 5 }).map((_, i) => (
           <View key={i} style={[styles.gridLine, { left: (width / 5) * i }]} />
@@ -255,8 +239,8 @@ export default function Index() {
 
 const ACCENT      = "#22c55e";
 const ACCENT_MID  = "#16a34a";
-const BG          = "#080e1a";
-const SURFACE     = "#0f1e2e";
+const BG          = "#ffffff";
+const SURFACE     = "#ffffff";
 
 const styles = StyleSheet.create({
   container: {
@@ -267,8 +251,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 28,
     overflow: "hidden",
   },
-
-  // ── Loading ──────────────────────────────────────────────────────
   loadingDot: {
     width: 8,
     height: 8,
@@ -276,8 +258,6 @@ const styles = StyleSheet.create({
     backgroundColor: ACCENT,
     opacity: 0.8,
   },
-
-  // ── Glow ─────────────────────────────────────────────────────────
   glowRing: {
     position: "absolute",
     width: 280,
@@ -299,8 +279,6 @@ const styles = StyleSheet.create({
     top: height * 0.09,
     alignSelf: "center",
   },
-
-  // ── Logo ─────────────────────────────────────────────────────────
   logoWrap: {
     width: 200,
     height: 200,
@@ -312,8 +290,6 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
   },
-
-  // ── Stats ─────────────────────────────────────────────────────────
   statsRow: {
     flexDirection: "row",
     gap: 10,
@@ -338,7 +314,7 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 13,
     fontWeight: "700",
-    color: "#e2e8f0",
+    color: "#000000",
     letterSpacing: 0.2,
   },
   statLabel: {
@@ -348,8 +324,6 @@ const styles = StyleSheet.create({
     letterSpacing: 0.4,
     textTransform: "uppercase",
   },
-
-  // ── Title ─────────────────────────────────────────────────────────
   eyebrow: {
     fontSize: 10,
     letterSpacing: 3,
@@ -362,14 +336,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 52,
     fontWeight: "800",
-    color: "#f8fafc",
+    color: "#000000",
     textAlign: "center",
     lineHeight: 56,
     letterSpacing: -1.5,
     marginBottom: 16,
   },
-
-  // ── Subtitle ──────────────────────────────────────────────────────
   subtitle: {
     fontSize: 15,
     color: "#64748b",
@@ -378,12 +350,9 @@ const styles = StyleSheet.create({
     marginBottom: 40,
     letterSpacing: 0.1,
   },
-
-  // ── Button ────────────────────────────────────────────────────────
   btnOuter: {
     width: "100%",
     borderRadius: 18,
-    // Outer glow shadow
     shadowColor: ACCENT,
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.35,
@@ -401,7 +370,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 10,
     overflow: "hidden",
-    // Top highlight
     borderTopWidth: 1,
     borderTopColor: "rgba(255,255,255,0.25)",
   },
@@ -423,16 +391,12 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "700",
   },
-
-  // ── Footer ────────────────────────────────────────────────────────
   footerNote: {
     fontSize: 12,
     color: "#334155",
     letterSpacing: 0.3,
     fontWeight: "500",
   },
-
-  // ── Grid decoration ───────────────────────────────────────────────
   gridDecor: {
     position: "absolute",
     top: 0,

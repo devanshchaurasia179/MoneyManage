@@ -8,9 +8,6 @@ import React, {
 import { useColorScheme, StatusBar } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-// ── DO NOT import getUser here at module level ──
-// getUser is called lazily after DB is confirmed ready
-
 interface ThemeContextValue {
   isDark: boolean;
   toggle: () => void;
@@ -21,7 +18,7 @@ interface ThemeContextValue {
 }
 
 const ThemeContext = createContext<ThemeContextValue>({
-  isDark: true,
+  isDark: false,        // ← default light
   toggle: () => {},
   setDark: () => {},
   userName: "",
@@ -35,30 +32,30 @@ const STORAGE_KEY = "app_theme";
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const systemScheme = useColorScheme();
-  const [isDark, setIsDark] = useState(systemScheme === "dark");
+  const [isDark, setIsDark] = useState(false);   // ← always start light
   const [loaded, setLoaded] = useState(false);
   const [userName, setUserName] = useState("");
 
   useEffect(() => {
-    // 1. Load theme preference
     AsyncStorage.getItem(STORAGE_KEY)
       .then((val) => {
-        if (val !== null) setIsDark(val === "dark");
-        else setIsDark(systemScheme === "dark");
+        if (val !== null) {
+          // User has an explicit saved preference — respect it
+          setIsDark(val === "dark");
+        } else {
+          // No saved preference — default to light regardless of system
+          setIsDark(false);
+        }
       })
       .catch(() => {})
       .finally(() => setLoaded(true));
 
-    // 2. Load user name safely — DB must be initialized by the time
-    //    this effect runs (initDB() is called in app/_layout.tsx before
-    //    ThemeProvider mounts, so it's safe here inside useEffect,
-    //    NOT at module/render time)
     try {
       const { getUser } = require("../utils/db");
       const users = getUser();
       if (users && users.length > 0) setUserName(users[0].name ?? "");
     } catch {
-      // DB not ready yet — userName stays "" until refreshUser() is called
+      // DB not ready yet
     }
   }, []);
 
@@ -67,9 +64,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       const { getUser } = require("../utils/db");
       const users = getUser();
       if (users && users.length > 0) setUserName(users[0].name ?? "");
-    } catch {
-      // silently ignore if DB not ready
-    }
+    } catch {}
   }, []);
 
   const toggle = useCallback(() => {
